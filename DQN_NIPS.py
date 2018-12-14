@@ -1,8 +1,9 @@
 import random
-from collections import deque
 
 import numpy as np
 import tensorflow as tf
+
+import replay_buffer
 
 class DeepQNetworks:
 	def __init__(self, n_actions, learning_rate=1e-6, 
@@ -12,8 +13,8 @@ class DeepQNetworks:
 		initial_epsion=0.9,
 		final_epsion=0.0,
 		n_explore=150000,
-		frame_per_action=1,
 		n_observes=100,
+		frame_per_action=1,
 		output_graph=False
 		):
 		self.n_actions = n_actions
@@ -24,12 +25,12 @@ class DeepQNetworks:
 		self.initial_epsion = initial_epsion
 		self.final_epsion = final_epsion
 		self.n_explore = n_explore
-		self.frame_per_action = frame_per_action
 		self.n_observes = n_observes
+		self.frame_per_action = frame_per_action
 		
 		self.epsion = initial_epsion
 		self.time_step = 0
-		self.replay_memory = deque()
+		self.replay_memory = replay_buffer.ReplayBuffer(memory_size)
 		self.createQNetwork()
 
 		self.saver = tf.train.Saver()
@@ -80,25 +81,32 @@ class DeepQNetworks:
 		with tf.variable_scope('train'):
 			self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
 
+	def setInitState(self, observation):
+		self.current_state = np.stack((observation, observation, observation, observation), axis = 2)
+
+	# modify
+	def setPerception(self, next_observation, action, reward, terminal):
+		new_state = np.append(self.current_state[:,:,1:], next_observation, axis = 2)
+		self.replay_memory.add(self.current_state, action, reward, new_state, terminal)
+		if self.time_step > self.n_observes:
+			# Train the network
+			self.trainQNetwork()
+
+		self.current_state = new_state
+		self.time_step += 1
+
 	def trainQNetwork(self):
 		# Step 1: obtain random minibatch from replay memory
-		minibatch = random.sample(self.replay_memory, self.batch_size)
-		state_batch = [data[0] for data in minibatch]
-		action_batch = [data[1] for data in minibatch]
-		reward_batch = [data[2] for data in minibatch]
-		nextState_batch = [data[3] for data in minibatch]
-
+		state_batch, action_batch, reward_batch, nextState_batch, terminal_batch = self.replay_memory.sample(self.batch_size)
 		# Step 2: calculate y 
 		Q_value_batch = self.sess.run(self.Q_value, feed_dict={self.state_input: nextState_batch})
 		y_batch = []
 		for i in range(0, self.batch_size):
-			terminal = minibatch[i][4]
+			terminal = terminal_batch[i]
 			if terminal:
 				y_batch.append(reward_batch[i])
 			else:
 				y_batch.append(reward_batch[i] + self.gamma * np.max(Q_value_batch[i]))
-		# y_batch = [reward if terminal else reward+self.gamma*np.max(q_value) for _, _, reward, _, terminal in minibatch]
-		# 列表生成式的可能性？
 		self.sess.run(self.train_op, feed_dict={
 			self.state_input: state_batch,
 			self.y_input: y_batch,
@@ -108,32 +116,11 @@ class DeepQNetworks:
 		if self.time_step % 10000 == 0:
 			self.saver.save(self.sess, 'saved_networks/' + 'Qnetwork', global_step = self.time_step)
 
-	def setInitState(self, observation):
-		self.current_state = np.stack((observation, observation, observation, observation), axis = 2)
-
-	def setPerception(self, next_observation, action, reward, terminal):
-		new_state = np.append(self.current_state[:,:,1:], next_observation, axis = 2)
-		self.replay_memory.append((self.current_state, action, reward, new_state, terminal))
-		if len(self.replay_memory) > self.memory_size:
-			self.replay_memory.popleft()
-		if self.time_step > self.n_observes:
-			# Train the network
-			self.trainQNetwork()
-
-		self.current_state = new_state
-		self.time_step += 1
-
 	def getAction(self):
 		Q_value = self.sess.run(self.Q_value, feed_dict={self.state_input: [self.current_state]})[0]
 		action = np.zeros(self.n_actions)
 		action_index = 0
 		if self.time_step % self.frame_per_action == 0:
-			# if random.random() <= self.epsion:
-			#     action_index = random.randrange(self.n_actions)
-			#     action[action_index] = 1
-			# else:
-			#     action_index = np.argmax(Q_value)
-			#     action[action_index] = 1
 			action_index = random.randrange(self.n_actions) if random.random() <= self.epsion else np.argmax(Q_value)
 			action[action_index] = 1
 		else:

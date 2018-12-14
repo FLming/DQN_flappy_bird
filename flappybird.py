@@ -15,7 +15,7 @@ def preprocess(observation):
 
 def playFlappyBird():
     action = 2
-    brain = DeepQNetworks(action, output_graph=True, initial_epsion=0.0)
+    brain = DeepQNetworks(action, output_graph=True)
     flappyBird = game.GameState()
     action0 = np.array([1,0])
     observation0, reward0, terminal = flappyBird.frame_step(action0)
