@@ -6,17 +6,14 @@ import tensorflow as tf
 import replay_buffer
 
 class DeepQNetworks:
-	def __init__(self, n_actions, learning_rate=1e-6, 
-		gamma=0.99, 
-		memory_size=50000, 
+	def __init__(self, n_actions, learning_rate=1e-6, gamma=0.99, memory_size=50000, 
 		batch_size=32,
 		initial_epsion=0.9,
 		final_epsion=0.0,
 		n_explore=150000,
 		n_observes=100,
-		frame_per_action=1,
-		output_graph=False
-		):
+		frame_per_action=4,
+		output_graph=False):
 		self.n_actions = n_actions
 		self.lr = learning_rate
 		self.gamma = gamma
@@ -36,13 +33,15 @@ class DeepQNetworks:
 		self.saver = tf.train.Saver()
 		self.sess = tf.Session()      
 		self.sess.run(tf.global_variables_initializer())
-		self.sess.graph.finalize()  		
+		self.sess.graph.finalize()
+
 		ckpt = tf.train.get_checkpoint_state("saved_networks")
 		if ckpt and ckpt.model_checkpoint_path:
 			self.saver.restore(self.sess, ckpt.model_checkpoint_path)
 			print("Successfully loaded:", ckpt.model_checkpoint_path)
 		else:
 			print("Could not find old network weights")
+
 		if output_graph:
 			tf.summary.FileWriter("logs/", self.sess.graph)
 
@@ -88,6 +87,7 @@ class DeepQNetworks:
 	def setPerception(self, next_observation, action, reward, terminal):
 		new_state = np.append(self.current_state[:,:,1:], next_observation, axis = 2)
 		self.replay_memory.add(self.current_state, action, reward, new_state, terminal)
+
 		if self.time_step > self.n_observes:
 			# Train the network
 			self.trainQNetwork()
@@ -107,6 +107,7 @@ class DeepQNetworks:
 				y_batch.append(reward_batch[i])
 			else:
 				y_batch.append(reward_batch[i] + self.gamma * np.max(Q_value_batch[i]))
+				
 		self.sess.run(self.train_op, feed_dict={
 			self.state_input: state_batch,
 			self.y_input: y_batch,
@@ -116,15 +117,14 @@ class DeepQNetworks:
 		if self.time_step % 10000 == 0:
 			self.saver.save(self.sess, 'saved_networks/' + 'Qnetwork', global_step = self.time_step)
 
-	def getAction(self):
-		Q_value = self.sess.run(self.Q_value, feed_dict={self.state_input: [self.current_state]})[0]
+	def getAction(self):		
 		action = np.zeros(self.n_actions)
-		action_index = 0
 		if self.time_step % self.frame_per_action == 0:
-			action_index = random.randrange(self.n_actions) if random.random() <= self.epsion else np.argmax(Q_value)
-			action[action_index] = 1
-		else:
-			action[0] = 1
+			Q_value = self.sess.run(self.Q_value, feed_dict={self.state_input: [self.current_state]})[0]
+			self.action_index = random.randrange(self.n_actions) if random.random() <= self.epsion else np.argmax(Q_value)
+		action[self.action_index] = 1
+
 		if self.epsion > self.final_epsion and self.time_step > self.n_observes:
 			self.epsion -= (self.initial_epsion - self.final_epsion) / self.n_explore
+
 		return action
