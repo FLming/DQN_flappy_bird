@@ -139,8 +139,8 @@ class GameState:
                     (self.playerx, self.playery))
 
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-        # pygame.display.update()
-        # FPSCLOCK.tick(FPS)
+        pygame.display.update()
+        FPSCLOCK.tick(FPS)
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
         return image_data, reward, terminal
 

@@ -1,6 +1,0 @@
-model_checkpoint_path: "Qnetwork-1820000"
-all_model_checkpoint_paths: "Qnetwork-1780000"
-all_model_checkpoint_paths: "Qnetwork-1790000"
-all_model_checkpoint_paths: "Qnetwork-1800000"
-all_model_checkpoint_paths: "Qnetwork-1810000"
-all_model_checkpoint_paths: "Qnetwork-1820000"
