@@ -12,7 +12,7 @@ class DeepQNetworks:
 		final_epsion=0.0,
 		n_explore=150000,
 		n_observes=100,
-		frame_per_action=4,
+		frame_per_action=1,
 		output_graph=False):
 		self.n_actions = n_actions
 		self.lr = learning_rate
@@ -100,13 +100,7 @@ class DeepQNetworks:
 		state_batch, action_batch, reward_batch, nextState_batch, terminal_batch = self.replay_memory.sample(self.batch_size)
 		# Step 2: calculate y 
 		Q_value_batch = self.sess.run(self.Q_value, feed_dict={self.state_input: nextState_batch})
-		y_batch = []
-		for i in range(0, self.batch_size):
-			terminal = terminal_batch[i]
-			if terminal:
-				y_batch.append(reward_batch[i])
-			else:
-				y_batch.append(reward_batch[i] + self.gamma * np.max(Q_value_batch[i]))
+		y_batch = np.where(terminal_batch, reward_batch, reward_batch + self.gamma * np.max(Q_value_batch, axis=1))
 				
 		self.sess.run(self.train_op, feed_dict={
 			self.state_input: state_batch,
