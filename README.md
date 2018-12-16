@@ -15,6 +15,6 @@ python flappybird.py
 - [] Implement others DQN such as Dueling DQN...
 ***
 ## Reference
-- repo: floodsung/DRL-FlappyBird
-- repo: openai/baselines
-- repo: MorvanZhou/Reinforcement-learning-with-tensorflow
+- repo: [floodsung/DRL-FlappyBird](https://github.com/floodsung/DRL-FlappyBird)
+- repo: [openai/baselines/deepq](https://github.com/openai/baselines/tree/master/baselines/deepq)
+- repo: [MorvanZhou/Reinforcement-learning-with-tensorflow](https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow)
