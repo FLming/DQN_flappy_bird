@@ -1,8 +1,8 @@
 # Deep Reinforcement learning for flappy bird
 
 ## Requirements
-- tensorflow
-- pygame
+- tensorflow 1.12
+- pygame 1.9.4
 ***
 ## Demo
 ``` shell
@@ -11,8 +11,8 @@ python flappybird.py
 ***
 ## Roadmap
 - [x] Implement 2013 paper DQN(with replay buffer)
-- [] Implement 2015 paper DQN(add the target network)
-- [] Implement others DQN such as Dueling DQN...
+- [ ] Implement 2015 paper DQN(add the target network)
+- [ ] Implement others DQN such as Dueling DQN...
 ***
 ## Reference
 - repo: [floodsung/DRL-FlappyBird](https://github.com/floodsung/DRL-FlappyBird)
