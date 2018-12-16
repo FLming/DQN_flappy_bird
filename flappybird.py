@@ -34,8 +34,8 @@ def playFlappyBird():
         brain.setPerception(next_observation, action, reward, terminal)
         if terminal:
             with open('scores.txt','a+') as f:
-                f.write("{},{},{}\n".format(episode, score, total_reward))
-            print("episode: {}, score: {}, total reward: {}".format(episode, score, total_reward))
+                f.write("{},{},{:.1f}\n".format(episode, score, total_reward))
+            print("episode: {}, score: {}, total reward: {:.1f}".format(episode, score, total_reward))
             total_reward = 0
             episode += 1
     

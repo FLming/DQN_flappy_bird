@@ -11,7 +11,7 @@ pip install tensorflow pygame opencv-python
 ``` shell
 python flappybird.py
 ```
-if you wanna see network architecture, add output_graph=True in class DeepQNetworks then
+if you wanna see network architecture, make output_graph to True then
 ``` shell
 tensorboard --logdir logs
 ```

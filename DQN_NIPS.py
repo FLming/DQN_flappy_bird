@@ -12,7 +12,7 @@ class DeepQNetworks:
         final_epsion=0.05,
         n_explore=150000,
         n_observes=100,
-        frame_per_action=2,
+        frame_per_action=1,
         output_graph=False):
         self.n_actions = n_actions
         self.lr = learning_rate
