@@ -8,11 +8,11 @@ import replay_buffer
 class DeepQNetworks:
 	def __init__(self, n_actions, learning_rate=1e-6, gamma=0.99, memory_size=50000, 
 		batch_size=32,
-		initial_epsion=0.9,
-		final_epsion=0.0,
+		initial_epsion=1.0,
+		final_epsion=0.05,
 		n_explore=150000,
 		n_observes=100,
-		frame_per_action=1,
+		frame_per_action=2,
 		output_graph=False):
 		self.n_actions = n_actions
 		self.lr = learning_rate
