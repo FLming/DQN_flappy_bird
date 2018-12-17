@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
@@ -8,8 +9,8 @@ import replay_buffer
 class DeepQNetworks:
     def __init__(self, n_actions, learning_rate=1e-6, gamma=0.99, memory_size=50000, 
         batch_size=32,
-        initial_epsion=0.5,
-        final_epsion=0.05,
+        initial_epsion=0,
+        final_epsion=0,
         n_explore=200000,
         n_observes=100,
         frame_per_action=1,
@@ -47,7 +48,7 @@ class DeepQNetworks:
         else:
             print("Could not find old network weights")
 
-        self.writer = tf.summary.FileWriter("logs/", self.sess.graph)
+        self.writer = tf.summary.FileWriter("logs/" + "{0:%Y-%m-%d_%H:%M:%S/}".format(datetime.now()), self.sess.graph)
 
     def createNetwork(self):
         self.state_input = tf.placeholder(tf.float32, [None,80,80,4], name='state_input')
