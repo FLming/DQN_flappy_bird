@@ -3,10 +3,9 @@ sys.path.append("game/")
 
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 
 import game.wrapped_flappy_bird as game
-from DQN_NIPS import DeepQNetworks
+from DQN_Nature import DeepQNetworks
 
 def preprocess(observation):	
     observation = cv2.cvtColor(cv2.resize(observation, (80, 80)), cv2.COLOR_BGR2GRAY)
@@ -24,19 +23,15 @@ def playFlappyBird():
     brain.setInitState(observation0)
 
     episode = 0
-    total_reward = 0
     while True:
         action = brain.getAction()
         score = flappyBird.score
         next_observation, reward, terminal = flappyBird.frame_step(action)
         next_observation = preprocess(next_observation)
-        total_reward += reward
         brain.setPerception(next_observation, action, reward, terminal)
+        
         if terminal:
-            with open('scores.txt','a+') as f:
-                f.write("{},{},{:.1f}\n".format(episode, score, total_reward))
-            print("episode: {}, score: {}, total reward: {:.1f}".format(episode, score, total_reward))
-            total_reward = 0
+            brain.logs(episode, score)
             episode += 1
     
 if __name__ == "__main__":
