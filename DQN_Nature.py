@@ -6,6 +6,9 @@ import tensorflow as tf
 
 import replay_buffer
 
+# replay buffer, target network
+SIGN = '2015Nature'
+
 class DeepQNetworks:
     def __init__(self, n_actions, 
         learning_rate=1e-6, 
@@ -45,18 +48,18 @@ class DeepQNetworks:
         self.sess.run(tf.global_variables_initializer())
         self.sess.graph.finalize()
 
-        ckpt = tf.train.get_checkpoint_state("saved_networks")
+        ckpt = tf.train.get_checkpoint_state(SIGN)
         if ckpt and ckpt.model_checkpoint_path:
             self.saver.restore(self.sess, ckpt.model_checkpoint_path)
             print("Successfully loaded:", ckpt.model_checkpoint_path)
         else:
             print("Could not find old network weights")
 
-        self.writer = tf.summary.FileWriter("logs/" + "{0:%Y-%m-%d_%H:%M:%S/}".format(datetime.now()), self.sess.graph)
+        self.writer = tf.summary.FileWriter("logs/" + SIGN, self.sess.graph)
 
     def createNetwork(self):
         self.state_input = tf.placeholder(tf.float32, [None,80,80,4], name='state_input')
-        self.next_state_input = tf.placeholder(tf.float32, [None,80,80,4], name='next_state_input')
+        self.target_state_input = tf.placeholder(tf.float32, [None,80,80,4], name='target_state_input')
         self.y_input = tf.placeholder(tf.float32, [None], name='y_input')
         self.action_input = tf.placeholder(tf.float32, [None, self.n_actions], name='action_input')
 
@@ -94,7 +97,7 @@ class DeepQNetworks:
             self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss, global_step=self.global_step)
 
         with tf.variable_scope("target_network"):
-            conv1 = conv_layer(self.next_state_input, 8, 4, 32, 4, name='conv1')
+            conv1 = conv_layer(self.target_state_input, 8, 4, 32, 4, name='conv1')
             pool1 = tf.nn.max_pool(conv1, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME', name='pool1')
             conv2 = conv_layer(pool1, 4, 32, 64, 2, name='conv2')
             conv3 = conv_layer(conv2, 3, 64, 64, 1, name='conv3')
@@ -120,8 +123,8 @@ class DeepQNetworks:
         # Step 1: obtain random minibatch from replay memory
         state_batch, action_batch, reward_batch, nextState_batch, terminal_batch = self.replay_memory.sample(self.batch_size)
         # Step 2: calculate y 
-        Q_value_batch = self.sess.run(self.Q_target, feed_dict={self.next_state_input: nextState_batch})
-        y_batch = np.where(terminal_batch, reward_batch, reward_batch + self.gamma * np.max(Q_value_batch, axis=1))
+        Q_target_batch = self.sess.run(self.Q_target, feed_dict={self.target_state_input: nextState_batch})
+        y_batch = np.where(terminal_batch, reward_batch, reward_batch + self.gamma * np.max(Q_target_batch, axis=1))
         
         summary, _ = self.sess.run([self.summary_Q_value, self.train_op], feed_dict={
             self.state_input: state_batch,
@@ -134,7 +137,7 @@ class DeepQNetworks:
             self.sess.run(self.replace_target_op)
 
         if self.time_step % 10000 == 0:
-            self.saver.save(self.sess, 'saved_networks/' + 'Qnetwork', global_step=self.global_step)
+            self.saver.save(self.sess, SIGN + '/Qnetwork', global_step=self.global_step)
 
     def getAction(self):		
         action = np.zeros(self.n_actions)
