@@ -28,7 +28,7 @@ if you wanna see network architecture, the change of variables and scores.
 ``` shell
 tensorboard --logdir logs
 ```
-if you wanna speed traing up, comment FPSCLOCK.tick(FPS) in wrapped_flappy_bird.py or add FPS
+if you wanna speed traning up, comment FPSCLOCK.tick(FPS) in wrapped_flappy_bird.py or add FPS
 ## Reference
 - repo: [floodsung/DRL-FlappyBird](https://github.com/floodsung/DRL-FlappyBird)
 - repo: [openai/baselines/deepq](https://github.com/openai/baselines/tree/master/baselines/deepq)
