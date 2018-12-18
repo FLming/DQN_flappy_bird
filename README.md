@@ -3,7 +3,7 @@
 - [x] Implement 2013 NIPS paper's DQN(with replay buffer)
 - [x] Implement 2015 Nature paper's DQN(add the target network)
 - [x] Implement double DQN
-- [ ] Implement others DQN such as Duelling DQN...
+- [ ] Implement others DQN such as Dueling DQN...
 ## Architecture now: 
 ![architecture](assets/architecture.png)
 ## Requirements
@@ -28,6 +28,7 @@ if you wanna see network architecture, the change of variables and scores.
 ``` shell
 tensorboard --logdir logs
 ```
+if you wanna speed traing up, comment FPSCLOCK.tick(FPS) in wrapped_flappy_bird.py or add FPS
 ## Reference
 - repo: [floodsung/DRL-FlappyBird](https://github.com/floodsung/DRL-FlappyBird)
 - repo: [openai/baselines/deepq](https://github.com/openai/baselines/tree/master/baselines/deepq)
