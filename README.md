@@ -2,7 +2,7 @@
 ## Roadmap
 - [x] Implement 2013 NIPS paper's DQN(with replay buffer)
 - [x] Implement 2015 Nature paper's DQN(add the target network)
-- [ ] Implement double DQN
+- [x] Implement double DQN
 - [ ] Implement others DQN such as Duelling DQN...
 ## Architecture now: 
 ![architecture](assets/architecture.png)
@@ -19,7 +19,12 @@ git clone https://github.com/FLming/DQN_flappy_bird.git
 cd DQN_flappybird
 python flappybird.py
 ```
-if you wanna see network architecture, and the change of variables.
+change the approach just change the code in flappybird.py e.g.
+``` python
+from double_DQN import DeepQNetworks 
+from DQN_Nature import DeepQNetworks
+```
+if you wanna see network architecture, the change of variables and scores.
 ``` shell
 tensorboard --logdir logs
 ```

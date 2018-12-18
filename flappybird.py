@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 
 import game.wrapped_flappy_bird as game
-from DQN_Nature import DeepQNetworks
+from double_DQN import DeepQNetworks
 
 def preprocess(observation):	
     observation = cv2.cvtColor(cv2.resize(observation, (80, 80)), cv2.COLOR_BGR2GRAY)
