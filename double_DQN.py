@@ -14,7 +14,7 @@ class DeepQNetworks:
         gamma=0.99, 
         memory_size=50000, 
         batch_size=32,
-        initial_epsion=0.0,
+        initial_epsion=0.9,
         final_epsion=0.0,
         n_explore=200000,
         n_observes=100,
@@ -126,7 +126,7 @@ class DeepQNetworks:
             self.state_input: next_state_batch,
             self.target_state_input: next_state_batch})
         Q_target_batch = Q_target_batch[range(self.batch_size), np.argmax(Q_value_batch, axis=1)]
-        y_batch = np.where(terminal_batch, reward_batch, self.gamma * Q_target_batch)
+        y_batch = np.where(terminal_batch, reward_batch, reward_batch + self.gamma * Q_target_batch)
         
         summary, _ = self.sess.run([self.summary_Q_value, self.train_op], feed_dict={
             self.state_input: state_batch,
