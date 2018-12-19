@@ -10,17 +10,16 @@ SIGN = '2013NIPS'
 
 class DeepQNetworks:
     def __init__(self, n_actions, 
-        learning_rate=1e-6, 
+        starter_learning_rate=0.000025, 
         gamma=0.99, 
         memory_size=50000, 
         batch_size=32,
-        initial_epsion=0.0,
-        final_epsion=0.0,
-        n_explore=200000,
+        initial_epsion=0,
+        final_epsion=0,
+        n_explore=100000,
         n_observes=100,
         frame_per_action=1):
         self.n_actions = n_actions
-        self.lr = learning_rate
         self.gamma = gamma
         self.memory_size = memory_size
         self.batch_size = batch_size
@@ -35,6 +34,7 @@ class DeepQNetworks:
         self.replay_memory = replay_buffer.ReplayBuffer(memory_size)
 
         self.global_step = tf.Variable(0, trainable=False, name='global_step')
+        self.lr = tf.train.exponential_decay(starter_learning_rate, self.global_step, 20000, 0.96)
         self.createQNetwork()
 
         self.saver = tf.train.Saver()
@@ -56,28 +56,28 @@ class DeepQNetworks:
         self.y_input = tf.placeholder(tf.float32, [None], name='y_input')
         self.action_input = tf.placeholder(tf.float32, [None, self.n_actions], name='action_input')
 
-        with tf.variable_scope("Q-network"):
+        with tf.variable_scope("Q_network"):
             with tf.variable_scope("conv0"):
-                W_con0 = tf.get_variable('W_con0', [8,8,4,32], initializer=tf.truncated_normal_initializer(stddev=0.01))
-                b_con0 = tf.get_variable('b_con0', [32], initializer=tf.constant_initializer(0.01))
+                W_con0 = tf.get_variable('W_con0', [8,8,4,32], initializer=tf.variance_scaling_initializer())
+                b_con0 = tf.get_variable('b_con0', [32], initializer=tf.constant_initializer())
                 conv0 = tf.nn.relu(tf.nn.conv2d(self.state_input, W_con0, strides=[1,4,4,1], padding='SAME') + b_con0)
                 pool0 = tf.nn.max_pool(conv0, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
             with tf.variable_scope("conv1"):
-                W_con1 = tf.get_variable('W_con1', [4,4,32,64], initializer=tf.truncated_normal_initializer(stddev=0.01))
-                b_con1 = tf.get_variable('b_con1', [64], initializer=tf.constant_initializer(0.01))
+                W_con1 = tf.get_variable('W_con1', [4,4,32,64], initializer=tf.variance_scaling_initializer())
+                b_con1 = tf.get_variable('b_con1', [64], initializer=tf.constant_initializer())
                 conv1 = tf.nn.relu(tf.nn.conv2d(pool0, W_con1, strides=[1,2,2,1], padding='SAME') + b_con1)
             with tf.variable_scope('conv2'):
-                W_con2 = tf.get_variable('W_con2', [3,3,64,64], initializer=tf.truncated_normal_initializer(stddev=0.01))
-                b_con2 = tf.get_variable('b_con2', [64], initializer=tf.constant_initializer(0.01))
+                W_con2 = tf.get_variable('W_con2', [3,3,64,64], initializer=tf.variance_scaling_initializer())
+                b_con2 = tf.get_variable('b_con2', [64], initializer=tf.constant_initializer())
                 conv2 = tf.nn.relu(tf.nn.conv2d(conv1, W_con2, strides=[1,1,1,1], padding='SAME') + b_con2)
             with tf.variable_scope('fc0'):
                 conv2_flat = tf.reshape(conv2, [-1,1600])
-                W_fc0 = tf.get_variable('W_fc0', [1600,512], initializer=tf.truncated_normal_initializer(stddev=0.01))
-                b_fc0 = tf.get_variable('b_fc0', [512], initializer=tf.constant_initializer(0.01))
+                W_fc0 = tf.get_variable('W_fc0', [1600,512], initializer=tf.variance_scaling_initializer())
+                b_fc0 = tf.get_variable('b_fc0', [512], initializer=tf.constant_initializer())
                 fc0 = tf.nn.relu(tf.matmul(conv2_flat, W_fc0) + b_fc0)
             with tf.variable_scope('fc1'):
-                W_fc1 = tf.get_variable('W_fc1', [512,self.n_actions], initializer=tf.truncated_normal_initializer(stddev=0.01))
-                b_fc1 = tf.get_variable('b_fc1', [self.n_actions], initializer=tf.constant_initializer(0.01))
+                W_fc1 = tf.get_variable('W_fc1', [512,self.n_actions], initializer=tf.variance_scaling_initializer())
+                b_fc1 = tf.get_variable('b_fc1', [self.n_actions], initializer=tf.constant_initializer())
                 self.Q_value = tf.matmul(fc0, W_fc1) + b_fc1
             self.summary_Q_value = tf.summary.scalar('mean_Q_value', tf.reduce_mean(self.Q_value))
 
@@ -103,9 +103,9 @@ class DeepQNetworks:
 
     def trainQNetwork(self):
         # Step 1: obtain random minibatch from replay memory
-        state_batch, action_batch, reward_batch, nextState_batch, terminal_batch = self.replay_memory.sample(self.batch_size)
+        state_batch, action_batch, reward_batch, next_state_batch, terminal_batch = self.replay_memory.sample(self.batch_size)
         # Step 2: calculate y 
-        Q_value_batch = self.sess.run(self.Q_value, feed_dict={self.state_input: nextState_batch})
+        Q_value_batch = self.sess.run(self.Q_value, feed_dict={self.state_input: next_state_batch})
         y_batch = np.where(terminal_batch, reward_batch, reward_batch + self.gamma * np.max(Q_value_batch, axis=1))
                 
         summary, _ = self.sess.run([self.summary_Q_value, self.train_op], feed_dict={
@@ -117,7 +117,7 @@ class DeepQNetworks:
         self.writer.add_summary(summary, self.sess.run(self.global_step))
 
         if self.time_step % 10000 == 0:
-            self.saver.save(self.sess, 'saved_networks/' + 'Qnetwork', global_step = self.global_step)
+            self.saver.save(self.sess, SIGN + '/Qnetwork', global_step = self.global_step)
 
     def getAction(self):		
         action = np.zeros(self.n_actions)

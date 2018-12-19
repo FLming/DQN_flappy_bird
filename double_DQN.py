@@ -10,18 +10,17 @@ SIGN = 'double_DQN'
 
 class DeepQNetworks:
     def __init__(self, n_actions, 
-        learning_rate=1e-6, 
+        starter_learning_rate=0.000025, 
         gamma=0.99, 
         memory_size=50000, 
         batch_size=32,
-        initial_epsion=0.9,
-        final_epsion=0.0,
-        n_explore=200000,
+        initial_epsion=0,
+        final_epsion=0,
+        n_explore=100000,
         n_observes=100,
         frame_per_action=1,
-        replace_target_iter=100):
+        replace_target_iter=1000):
         self.n_actions = n_actions
-        self.lr = learning_rate
         self.gamma = gamma
         self.memory_size = memory_size
         self.batch_size = batch_size
@@ -37,6 +36,7 @@ class DeepQNetworks:
         self.replay_memory = replay_buffer.ReplayBuffer(memory_size)
 
         self.global_step = tf.Variable(0, trainable=False, name='global_step')
+        self.lr = tf.train.exponential_decay(starter_learning_rate, self.global_step, 20000, 0.96)
         self.createNetwork()
         q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Q_network')
         t_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_network')
