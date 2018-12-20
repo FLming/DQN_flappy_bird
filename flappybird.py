@@ -22,7 +22,6 @@ def playFlappyBird():
     ret, observation0 = cv2.threshold(observation0, 1, 1, cv2.THRESH_BINARY)
     brain.setInitState(observation0)
 
-    episode = 0
     while True:
         action = brain.getAction()
         score = flappyBird.score
@@ -31,8 +30,7 @@ def playFlappyBird():
         brain.setPerception(next_observation, action, reward, terminal)
         
         if terminal:
-            brain.logs(episode, score)
-            episode += 1
+            brain.log_score(score)
     
 if __name__ == "__main__":
     playFlappyBird()
