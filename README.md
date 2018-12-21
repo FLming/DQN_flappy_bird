@@ -4,8 +4,6 @@
 - [x] Implement 2015 Nature paper's DQN(add the target network)
 - [x] Implement double DQN
 - [ ] Implement others DQN such as Dueling DQN...
-## Architecture now: 
-![architecture](assets/architecture.png)
 ## Requirements
 - tensorflow
 - pygame
