@@ -14,29 +14,22 @@ class DeepQNetworks:
         gamma=0.99, 
         memory_size=50000, 
         batch_size=32,
-        initial_epsion=1,
-        final_epsion=0.05,
-        n_explore=100000,
-        n_observes=5000,
-        frame_per_action=5,
-        replace_target_iter=1000):
+        n_explore=10000,
+        frame_per_action=4,
+        replace_target_iter=500):
         self.n_actions = n_actions
         self.gamma = gamma
         self.memory_size = memory_size
         self.batch_size = batch_size
-        self.initial_epsion = initial_epsion
-        self.final_epsion = final_epsion
         self.n_explore = n_explore
-        self.n_observes = n_observes
         self.frame_per_action = frame_per_action
         self.replace_target_iter = replace_target_iter
         
-        self.epsion = initial_epsion
         self.time_step = 0
         self.replay_memory = replay_buffer.ReplayBuffer(memory_size)
 
         self.global_step = tf.Variable(0, trainable=False, name='global_step')
-        self.lr = tf.train.exponential_decay(starter_learning_rate, self.global_step, 20000, 0.5)
+        self.lr = tf.train.exponential_decay(starter_learning_rate, self.global_step, 10000, 0.96)
         self.createNetwork()
         q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Q_network')
         t_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_network')
@@ -127,7 +120,7 @@ class DeepQNetworks:
         Q_target_batch = self.sess.run(self.Q_target, feed_dict={self.target_state_input: next_state_batch})
         y_batch = np.where(terminal_batch, reward_batch, reward_batch + self.gamma * np.max(Q_target_batch, axis=1))
         
-        summary, _ = self.sess.run([self.self.merged, self.train_op], feed_dict={
+        summary, _ = self.sess.run([self.merged, self.train_op], feed_dict={
             self.state_input: state_batch,
             self.y_input: y_batch,
             self.action_input: action_batch})
@@ -142,27 +135,16 @@ class DeepQNetworks:
 
     def getAction(self):	
         action = np.zeros(self.n_actions)
-        # 小鸟不适合这种方式
-        # if self.time_step % self.frame_per_action == 0:
-        #     Q_value = self.sess.run(self.Q_value, feed_dict={self.state_input: [self.current_state]})[0]
-        #     action_index = random.randrange(self.n_actions) if random.random() <= self.epsion else np.argmax(Q_value)
-        #     action[action_index] = 1
-        # else:
-        #     action[0] = 1 # do nothing
-        if self.sess.run(self.global_step) < self.n_observes:
-            if self.time_step % self.frame_per_action == 0:
+        if self.sess.run(self.global_step) < self.n_explore:
+            if self.sess.run(self.global_step) % self.frame_per_action == 0:
                 Q_value = self.sess.run(self.Q_value, feed_dict={self.state_input: [self.current_state]})[0]
-                action_index = random.randrange(self.n_actions) if random.random() <= self.epsion else np.argmax(Q_value)
+                action_index = random.randrange(self.n_actions) if random.random() <= 0.5 else np.argmax(Q_value)
                 action[action_index] = 1
             else:
                 action[0] = 1 # do nothing
         else:
             Q_value = self.sess.run(self.Q_value, feed_dict={self.state_input: [self.current_state]})[0]
-            action_index = random.randrange(self.n_actions) if random.random() <= self.epsion else np.argmax(Q_value)
-            action[action_index] = 1
-
-        if self.epsion > self.final_epsion:
-            self.epsion -= (self.initial_epsion - self.final_epsion) / self.n_explore
+            action[np.argmax(Q_value)] = 1
 
         return action
 
