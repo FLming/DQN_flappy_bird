@@ -3,7 +3,7 @@
 - [x] Implement 2013 NIPS paper's DQN(with replay buffer)
 - [x] Implement 2015 Nature paper's DQN(add the target network)
 - [x] Implement double DQN
-- [ ] Implement others DQN such as Dueling DQN...
+- [x] Implement Dueling DQN
 ## Requirements
 - tensorflow
 - pygame
