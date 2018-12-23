@@ -28,7 +28,6 @@ def playFlappyBird():
         next_observation, reward, terminal = flappyBird.frame_step(action)
         next_observation = preprocess(next_observation)
         brain.setPerception(next_observation, action, reward, terminal)
-        
         if terminal:
             brain.log_score(score)
     
