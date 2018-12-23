@@ -17,7 +17,7 @@ Each approach both played about 500k frame in my computer.
 | double_DQN | 31.530 | 870 |
 | dueling_DQN | 30.520 | 797 |
 
-**The score here does not indicate the pros and cons of the algorithm.**
+**The score here cannot strictly represent the pros and cons of the algorithm.**
 
 You can download the [trained model and logs](https://drive.google.com/drive/folders/1BDwjBMUV1OeRRtFZbgt5wOaoeX2zig9-?usp=sharing)
 
