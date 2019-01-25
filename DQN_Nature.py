@@ -66,7 +66,7 @@ class DeepQNetworks:
         def fc_layer(input, channels_in, channels_out, activation=None, name='fc'):
             with tf.variable_scope(name):
                 w = tf.get_variable('W', [channels_in, channels_out], initializer=tf.variance_scaling_initializer())
-                b = b_fc0 = tf.get_variable('B', [channels_out], initializer=tf.constant_initializer())
+                b = tf.get_variable('B', [channels_out], initializer=tf.constant_initializer())
                 fc = tf.matmul(input, w) + b
                 if activation == None:
                     return fc

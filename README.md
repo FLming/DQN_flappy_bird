@@ -5,7 +5,6 @@
 - [x] Implement 2015 Nature paper's DQN(add the target network)
 - [x] Implement double DQN
 - [x] Implement Dueling DQN
-- [ ] add Prioritized replay buffer
 
 ## Results
 Each approach both played about 500k frame in my computer.
